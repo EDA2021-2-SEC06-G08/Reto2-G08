@@ -62,7 +62,7 @@ def printnArtworksOldestByMedium(oldestArtworks, n, medium):
             num += 1
         print('')
     else:
-        print(f"Las {lt.size(oldestArtworks)} obras más antiguas con la técnica {medium} son: ")
+        print(f"Solo se encontraron {lt.size(oldestArtworks)} obras con la técnica {medium}, estas son: ")
         for i in lt.iterator(oldestArtworks):
             print('')
             print(f"{num}. {i}")
