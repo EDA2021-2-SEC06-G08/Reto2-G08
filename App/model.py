@@ -136,11 +136,7 @@ def nArtworksOldestByMedium(catalog, n, medium):
         pareja = mp.get(catalog["medium"], medium)
         lista = me.getValue(pareja)
         ms.sort(lista, cmpArworksByDate)
-        if lt.size(lista) >= n:
-            oldestArtworks = lt.subList(lista, 1, n) 
-            return oldestArtworks
-        else: 
-            return lista
+        return lista
 
 
     """las n obras más

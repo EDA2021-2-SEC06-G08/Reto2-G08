@@ -56,10 +56,16 @@ def printnArtworksOldestByMedium(oldestArtworks, n, medium):
     num = 1
     if lt.size(oldestArtworks) >= n:
         print(f"Las {n} obras más antiguas con la técnica {medium} son: ")
+        print("Nota: para ordenar solo se tienen en cuenta las obras con fecha disponible")
         for i in lt.iterator(oldestArtworks):
-            print('')
-            print(f"{num}. {i}")
-            num += 1
+            if i["Date"] == 0:                 
+                continue
+            else:
+                print('')
+                print(f"{num}. {i}")
+                if num == n:
+                    break
+                num += 1
         print('')
     else:
         print(f"Solo se encontraron {lt.size(oldestArtworks)} obras con la técnica {medium}, estas son: ")
