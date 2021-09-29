@@ -102,7 +102,7 @@ while True:
         if artworks:
             printnArtworksOldestByMedium (artworks, n, medium)
         else:
-            print("Pruebe con un número entero positivo y con un medio disponible en el MoMA")
+            print("Pruebe con un medio disponible en el MoMA")
             print('')
 
     else:
