@@ -1,3 +1,7 @@
-• Req. 2 - Camilo Ortiz, 201821615, c.ortizc@uniandes.edu.co
 
-• Req. 3 - Kevin Fernando Gomez, 200211089, calozanog@uniandes.edu.co
+
+Integrantes:
+
+Req. 3 - Kevin Fernando Gomez Camargo, 202015120, k.gomezc@uniandes.edu.co
+
+Req. 4 - Camilo Ortiz Cruz, 201821615, c.ortizc@uniandes.edu.co
