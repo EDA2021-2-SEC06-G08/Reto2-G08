@@ -37,9 +37,38 @@ operación solicitada
 def printMenu():
     print("Bienvenido")
     print("1- Cargar información en el catálogo")
-    print("2- ")
+    print("2- Las n obras más antiguas para un medio específico")
+    print("0- Salir")
 
-catalog = None
+def initCatalog():
+    """
+    Incializa el catalogo del museo
+    """
+    return controller.initCatalog()
+
+def loadData(catalog):
+    controller.loadData(catalog)
+
+# Funciones de impresión
+def printnArtworksOldestByMedium(oldestArtworks, n, medium):
+    print('')
+    print(f"{41*'='} Req. Lab No.5 Answer {41*'='}")
+    num = 1
+    if lt.size(oldestArtworks) >= n:
+        print(f"Las {n} obras más antiguas con la técnica {medium} son: ")
+        for i in lt.iterator(oldestArtworks):
+            print('')
+            print(f"{num}. {i}")
+            num += 1
+        print('')
+    else:
+        print(f"Las {lt.size(oldestArtworks)} obras más antiguas con la técnica {medium} son: ")
+        for i in lt.iterator(oldestArtworks):
+            print('')
+            print(f"{num}. {i}")
+            num += 1
+        print('')
+
 
 """
 Menu principal
@@ -48,10 +77,27 @@ while True:
     printMenu()
     inputs = input('Seleccione una opción para continuar\n')
     if int(inputs[0]) == 1:
+        print('')
         print("Cargando información de los archivos ....")
-
+        print('')
+        catalog = initCatalog()
+        loadData(catalog)
+        
     elif int(inputs[0]) == 2:
-        pass
+        print('')
+        try:
+            n = int(input("Ingrese el número de obras: "))
+        except:
+            print("Pruebe con un número entero positivo")
+            print('')
+            continue
+        medium = input("Ingrese el medio: ")
+        artworks = controller.nArtworksOldestByMedium(catalog, n, medium)
+        if artworks:
+            printnArtworksOldestByMedium (artworks, n, medium)
+        else:
+            print("Pruebe con un número entero positivo y con un medio disponible en el MoMA")
+            print('')
 
     else:
         sys.exit(0)
