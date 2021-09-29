@@ -137,7 +137,7 @@ def nArtworksOldestByMedium(catalog, n, medium):
         lista = me.getValue(pareja)
         ms.sort(lista, cmpArworksByDate)
         if lt.size(lista) >= n:
-            oldestArtworks = lt.subList(lista, lt.size(lista)-(n-1), n) 
+            oldestArtworks = lt.subList(lista, 1, n) 
             return oldestArtworks
         else: 
             return lista
@@ -148,7 +148,7 @@ antiguas para un medio específico"""
 
 # Funciones utilizadas para comparar elementos dentro de una lista
 def cmpArworksByDate(medium1, medium2):
-    return medium1["Date"] < medium2["Date"]
+    return medium1["Date"] < medium2["Date"]   
 
 
 # Funciones de ordenamiento
