@@ -70,14 +70,14 @@ def newCatalog():
     """
     catalog['medium'] = mp.newMap(138112//16,
                                    maptype='PROBING',
-                                   loadfactor=0.5)
+                                   loadfactor=0.8)
     
     """
     Este índice crea un map cuya llave es la nacionalidad de la obra, hay 195 paises en el mundo 
     """
     catalog['Nationality'] = mp.newMap(195//4,
                                    maptype='PROBING',
-                                   loadfactor=0.5)
+                                   loadfactor=0.8)
     
     """
     Este índice crea un map cuya llave es id del artista, hay 15220 artistas
