@@ -38,6 +38,7 @@ def printMenu():
     print("Bienvenido")
     print("1- Cargar información en el catálogo")
     print("2- Las n obras más antiguas para un medio específico")
+    print("3- número total de obras de una nacionalidad utilizando el índice Nationality")
     print("0- Salir")
 
 def initCatalog():
@@ -76,6 +77,12 @@ def printnArtworksOldestByMedium(oldestArtworks, n, medium):
         print('')
 
 
+def printnumArtworks (total, nacionalidad):
+    print('')
+    print(f"{41*'='} Req. Lab No.6 Answer {41*'='}")
+    print(f"La nacionalidad '{nacionalidad}' tiene un numero total de obras de: {total}")
+    print("")
+
 """
 Menu principal
 """
@@ -103,6 +110,15 @@ while True:
             printnArtworksOldestByMedium (artworks, n, medium)
         else:
             print("Pruebe con un medio disponible en el MoMA")
+            print('')
+
+    elif int(inputs[0]) == 3:
+        nacionalidad = input("Ingrese la nacionalidad: ")
+        numArtworks = controller.numArtworks(catalog, nacionalidad)
+        if numArtworks:
+            printnumArtworks(numArtworks, nacionalidad)
+        else:
+            print("Pruebe con una nacionalidad disponible en el MoMA")
             print('')
 
     else:

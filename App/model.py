@@ -43,26 +43,52 @@ Se define la estructura de un catálogo de videos. El catálogo tendrá dos list
 los mismos.
 """
 
+# Decorador para medir el tiempo
+def timer(func):
+    def wraper(*args, **kwargs):
+        start = ptime()
+        result = func(*args,**kwargs)
+        stop = ptime()
+        print("\n")
+        print(f"La función tardo {(stop-start)*1000} ms")
+        return result
+    return wraper
+
 # Construccion de modelos
 def newCatalog():
     catalog = {"artists": None,
                "artworks": None,
-               "medium": None}
+               "medium": None,
+               "Nationality": None,
+               "ConstID": None}
 
     catalog['artworks'] = lt.newList('ARRAY_LIST')
+    catalog['artists'] = lt.newList('ARRAY_LIST')
     
     """
     Este índice crea un map cuya llave es el medio/técnica de la obra, se asume que cada medio tenga unas 4 obras 
     """
     catalog['medium'] = mp.newMap(138112//16,
+                                   maptype='PROBING',
+                                   loadfactor=0.5)
+    
+    """
+    Este índice crea un map cuya llave es la nacionalidad de la obra, hay 195 paises en el mundo 
+    """
+    catalog['Nationality'] = mp.newMap(195//4,
+                                   maptype='PROBING',
+                                   loadfactor=0.5)
+    
+    """
+    Este índice crea un map cuya llave es id del artista, hay 15220 artistas
+    """
+    catalog['ConstID'] = mp.newMap(15220//4,
                                    maptype='CHAINING',
                                    loadfactor=4.0)
+
     return catalog
 
 # Funciones para agregar informacion al catalogo
-""" se comenta porque solo es necesario cargar las obras por el momento y aún no está definido
-    como se van a añadir exactemente los artistas
-
 def addArtist(catalog, artist):
     filtered = {"ConstituentID":int(artist["ConstituentID"]),
     "Gender":artist["Gender"], 
@@ -72,7 +98,11 @@ def addArtist(catalog, artist):
     "EndDate": int(artist["EndDate"]) }
 
     lt.addLast(catalog["artists"], filtered)
-"""
+
+    if mp.contains(catalog['ConstID'], filtered['ConstituentID']):
+        pass
+    else:
+        mp.put(catalog['ConstID'], filtered['ConstituentID'], filtered)
 
 def addArtwork(catalog, artwork):
     filtered = {"Title":artwork["Title"], 
@@ -102,7 +132,20 @@ def addArtwork(catalog, artwork):
         mp.put(catalog['medium'], filtered['Medium'], lt.newList('ARRAY_LIST'))
         pareja = mp.get(catalog['medium'], filtered['Medium'])
         lt.addLast(me.getValue(pareja), filtered)
-    
+
+    for artistID in filtered["ConstituentID"] :
+        pareja = mp.get(catalog['ConstID'], artistID)
+        artista = me.getValue(pareja) 
+        nacionalidad = artista["Nationality"] 
+        
+        if mp.contains(catalog['Nationality'], nacionalidad):
+            pareja = mp.get(catalog['Nationality'], nacionalidad)
+            lt.addLast(me.getValue(pareja), filtered)
+        else:
+            mp.put(catalog['Nationality'], nacionalidad, lt.newList('ARRAY_LIST'))
+            pareja = mp.get(catalog['Nationality'], nacionalidad)
+            lt.addLast(me.getValue(pareja), filtered)
+
 
 def parseNat(nationality):
     if nationality == "" or nationality == "Nationality unknown":
@@ -139,6 +182,15 @@ def nArtworksOldestByMedium(catalog, n, medium):
         return lista
 
 
+def numArtworks(catalog, nacionalidad):
+    if not mp.contains(catalog['Nationality'], nacionalidad):
+        return False
+    else:
+        pareja = mp.get(catalog["Nationality"], nacionalidad)
+        lista = me.getValue(pareja)
+        total = lt.size(lista)
+        return total
+
     """las n obras más
 antiguas para un medio específico"""
 
@@ -150,13 +202,3 @@ def cmpArworksByDate(medium1, medium2):
 # Funciones de ordenamiento
 
 
-# Decorador para medir el tiempo
-def timer(func):
-    def wraper(*args, **kwargs):
-        start = ptime()
-        result = func(*args,**kwargs)
-        stop = ptime()
-        print("\n")
-        print(f"La función tardo {(stop-start)*1000} ms")
-        return result
-    return wraper

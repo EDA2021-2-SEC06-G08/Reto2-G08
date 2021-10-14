@@ -23,31 +23,45 @@
 import config as cf
 import model
 import csv
+from time import process_time as ptime 
 
+# Decorador para medir el tiempo
+def timer(func):
+    def wraper(*args, **kwargs):
+        start = ptime()
+        result = func(*args,**kwargs)
+        stop = ptime()
+        print("\n")
+        print(f"La función tardo {(stop-start)*1000} ms")
+        return result
+    return wraper
 
 """
 El controlador se encarga de mediar entre la vista y el modelo.
 """
 
 # Inicialización del Catálogo
+@timer
 def initCatalog():
     return model.newCatalog()
 
 # Funciones para la carga de datos
+@timer
 def loadData(catalog):
-    #loadArtists(catalog)
+    loadArtists(catalog)
     loadArtworks(catalog)
 
-"""
+""" Se suman los dos tiempo del decorador"""
+
 def loadArtists(catalog):
-    filename = cf.data_dir + "MoMa/Artists-utf8-large.csv"
+    filename = cf.data_dir + "MoMa/Artists-utf8-50pct.csv"
     input_file = csv.DictReader(open(filename, encoding="utf-8"))
     for artist in input_file:
         model.addArtist(catalog, artist)
-"""
+
 
 def loadArtworks(catalog):
-    filename= cf.data_dir + "MoMA/Artworks-utf8-small.csv"
+    filename= cf.data_dir + "MoMA/Artworks-utf8-50pct.csv"
     input_file = csv.DictReader(open(filename, encoding="utf-8"))
     for artwork in input_file:
         model.addArtwork(catalog, artwork)
@@ -59,3 +73,8 @@ def sortArtworks(catalog):
 # Funciones de consulta sobre el catálogo
 def  nArtworksOldestByMedium(catalog, n, medium):
     return model.nArtworksOldestByMedium(catalog, n, medium)
+
+def numArtworks(catalog, nacionalidad):
+    return model.numArtworks(catalog, nacionalidad)
+
+
