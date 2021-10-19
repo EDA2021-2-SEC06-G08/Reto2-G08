@@ -85,6 +85,7 @@ def newCatalog():
     catalog['ConstID'] = mp.newMap(15220//4,
                                    maptype='CHAINING',
                                    loadfactor=4.0)
+    catalog["Req4"] = None
 
     return catalog
 
@@ -124,7 +125,6 @@ def addArtwork(catalog, artwork):
         "Seat Height (cm)":toFloat(artwork["Seat Height (cm)"]) }
 
     lt.addLast(catalog["artworks"], filtered)
-
     if mp.contains(catalog['medium'], filtered['Medium']):
         pareja = mp.get(catalog['medium'], filtered['Medium'])
         lt.addLast(me.getValue(pareja), filtered)
@@ -146,6 +146,8 @@ def addArtwork(catalog, artwork):
             pareja = mp.get(catalog['Nationality'], nacionalidad)
             lt.addLast(me.getValue(pareja), filtered)
 
+def loadAnswers(catalog):
+    catalog["Req4"] = classifyByNation(catalog)
 
 def parseNat(nationality):
     if nationality == "" or nationality == "Nationality unknown":
@@ -194,11 +196,165 @@ def numArtworks(catalog, nacionalidad):
     """las n obras más
 antiguas para un medio específico"""
 
+def getArtistsCronOrder(catalog, iyear, fyear):
+    datos = {"NumTot":0,
+            "Primeros3":lt.newList("ARRAY_LIST"),
+            "Ultimos3":None}
+    artists = catalog["artists"]
+    pos = ceilSearch(iyear, artists, "BeginDate")
+    if pos[1]:
+        for i in range(pos[0]-1, 1, -1):
+            if lt.getElement(artists, i)["BeginDate"] < iyear:
+                pos = i + 1 
+                break
+    else:
+        pos = pos[0]
+    maxi = 0
+    for i in range(pos, lt.size(artists)+1):
+        elem = lt.getElement(artists,i)
+        if iyear <= elem["BeginDate"] <= fyear:
+            datos["NumTot"] += 1
+            if datos["NumTot"] <= 3:
+                lt.addLast(datos["Primeros3"], elem)
+            if i > maxi:
+                maxi = i
+        if elem["BeginDate"] > fyear:
+            break
+    datos["Ultimos3"] = lt.subList(artists,maxi-2, 3)
+    return datos
+
+#Obtenido de https://www.techiedelight.com/find-floor-ceil-number-sorted-array/
+def ceilSearch(value, list, key):
+    upper = lt.size(list)
+    lower = 1
+    ceil = -1
+    while lower <= upper:
+        mid = (upper-lower) // 2 + lower
+        elem = lt.getElement(list, mid)[key]
+
+        if elem == value:
+            return mid,True
+    
+        elif value > elem:
+            lower = mid + 1
+        
+        else:
+            ceil = mid
+            upper = mid - 1 
+    return ceil, False
+
+
+def getArtworksCronOrder(catalog, idate, fdate):
+    idate = toDate(idate)
+    fdate = toDate(fdate)
+    res = {"NumTot":0,
+            "Purchase":0,
+            "NumArtistas": 0,
+            "Primeros3":lt.newList("ARRAY_LIST"),
+            "Ultimos3":lt.newList("ARRAY_LIST")}
+
+    pos = ceilSearch(idate, catalog["artworks"], "DateAcquired")
+    if pos[1]:
+        for i in range(pos[0]-1, 1, -1):
+            elem = lt.getElement(catalog["artworks"],i)
+            if elem < idate:
+                pos = i + 1
+                break
+    else:
+        pos = pos[0]
+    maxi = pos
+    datos = catalog["artworks"]
+    for i in range(pos, lt.size(datos)+1):
+        elem = lt.getElement(datos, i)
+        if idate <= elem["DateAcquired"] <= fdate:
+            res["NumTot"] += 1
+            if "purchase" in elem["CreditLine"].lower():
+                res["Purchase"] += 1
+            for id in elem["ConstituentID"]:
+                res["NumArtistas"] += 1
+            if res["NumTot"] <= 3:
+                filtrado = {"Title": elem["Title"], "ArtistsNames":lt.newList("ARRAY_LIST"), "Medium":elem["Medium"], "Date":elem["Date"], "DateAcquired":elem["DateAcquired"], "Dimensions":elem["Dimensions"]}
+                for id in elem["ConstituentID"]:
+                    name = mp.get(catalog["ConstID"], id)["value"]["DisplayName"]
+                    lt.addLast(filtrado["ArtistsNames"], name)
+                lt.addLast(res["Primeros3"], filtrado)
+            if i > maxi:
+                maxi = i
+        if elem["DateAcquired"] > fdate:
+            break
+    for i in range(maxi-2, maxi+1):
+        elem = lt.getElement(datos, i)
+        filtrado = {"Title": elem["Title"], "ArtistsNames":lt.newList("ARRAY_LIST"), "Medium":elem["Medium"], "Date":elem["Date"], "DateAcquired":elem["DateAcquired"], "Dimensions":elem["Dimensions"]}
+        for id in elem["ConstituentID"]:
+            name = mp.get(catalog["ConstID"], id)["value"]["DisplayName"]
+            lt.addLast(filtrado["ArtistsNames"], name)
+        lt.addLast(res["Ultimos3"], filtrado)
+
+
+def classifyByNation(catalog):
+    UniqueNats = mp.newMap(195, maptype='PROBING',loadfactor=0.5)
+    NumANats = mp.newMap(195, maptype='PROBING',loadfactor=0.5)
+
+    for obra in lt.iterator(catalog["artworks"]):
+        adjust = {"Title": obra["Title"], "Date": obra["Date"], "Medium": obra["Medium"], "Dimensions" :obra["Dimensions"], "ArtistsNames":lt.newList("ARRAY_LIST")}
+        nations = mp.newMap(195,maptype='PROBING',loadfactor=0.5)
+        for id in obra["ConstituentID"]:
+            try:
+                artist = mp.get(catalog["ConstID"], id)["value"]
+                name,nationality = artist["DisplayName"], artist["Nationality"]
+            except:
+                name = nationality = "Unknown"
+            
+            if nationality == "":
+                nationality = "Unknown"
+            
+            if mp.contains(nations, nationality):
+                mp.get(nations, nationality)["value"] += 1
+            else:
+                mp.put(nations, nationality, 1)
+            
+            lt.addLast(adjust["ArtistsNames"], name)
+
+        for national in lt.iterator(mp.keySet(nations)):
+            if mp.contains(UniqueNats, national):
+                lt.addLast(mp.get(UniqueNats, national)["value"], adjust)
+            else:
+                mp.put(UniqueNats, national, lt.newList("ARRAY_LIST"))
+                lt.addLast(mp.get(UniqueNats, national)["value"], adjust)
+
+            if mp.contains(NumANats, national):
+                mp.get(NumANats, national)["value"] += mp.get(nations, national)["value"]
+            else:
+                mp.put(NumANats, national, mp.get(nations, national)["value"])
+
+    size = lt.newList("ARRAY_LIST")
+    for key in lt.iterator(mp.keySet(NumANats)):
+        val = mp.get(NumANats, key)["value"]
+        lt.addLast(size, (key,val))
+
+    ms.sort(size, lambda elem1, elem2 : elem1[1] > elem2[1])
+
+    top10 = lt.subList(size,1,10)
+
+    countryMost = lt.getElement(size, 1)[0]
+    country = mp.get(UniqueNats, countryMost)
+    res = (top10, country)
+    return res
+
+
+
+
 # Funciones utilizadas para comparar elementos dentro de una lista
 def cmpArworksByDate(medium1, medium2):
     return medium1["Date"] < medium2["Date"]   
 
+def cmpArtistsbyDate(artist1, artist2):
+    return artist1["BeginDate"] < artist2["BeginDate"]
 
 # Funciones de ordenamiento
+def sortArtists(catalog):
+    ms.sort(catalog["artists"],cmpArtistsbyDate)
 
+def sortArtworks(catalog):
+    ms.sort(catalog["artworks"], lambda artwork1, artwork2: artwork1["DateAcquired"] < artwork2["DateAcquired"])
 

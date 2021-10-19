@@ -37,8 +37,10 @@ operación solicitada
 def printMenu():
     print("Bienvenido")
     print("1- Cargar información en el catálogo")
-    print("2- Las n obras más antiguas para un medio específico")
-    print("3- número total de obras de una nacionalidad utilizando el índice Nationality")
+    print("2- REQ. 1: Listar cronológicamente los artistas ")
+    print("3- REQ. 2: Listar cronológicamente las adquisiciones")
+    print("4. Req. 3")
+    print("5. REQ. 4: Clasificar las obras por la nacionalidad de sus creadores")
     print("0- Salir")
 
 def initCatalog():
@@ -50,38 +52,41 @@ def initCatalog():
 def loadData(catalog):
     controller.loadData(catalog)
 
+def sortArtists(catalog):
+    controller.sortArtists(catalog)
+
 # Funciones de impresión
-def printnArtworksOldestByMedium(oldestArtworks, n, medium):
-    print('')
-    print(f"{41*'='} Req. Lab No.5 Answer {41*'='}")
-    num = 1
-    if lt.size(oldestArtworks) >= n:
-        print(f"Las {n} obras más antiguas con la técnica {medium} son: ")
-        print("Nota: para ordenar solo se tienen en cuenta las obras con fecha disponible")
-        for i in lt.iterator(oldestArtworks):
-            if i["Date"] == 0:                 
-                continue
-            else:
-                print('')
-                print(f"{num}. {i}")
-                if num == n:
-                    break
-                num += 1
-        print('')
-    else:
-        print(f"Solo se encontraron {lt.size(oldestArtworks)} obras con la técnica {medium}, estas son: ")
-        for i in lt.iterator(oldestArtworks):
-            print('')
-            print(f"{num}. {i}")
-            num += 1
-        print('')
+# def printnArtworksOldestByMedium(oldestArtworks, n, medium):
+#     print('')
+#     print(f"{41*'='} Req. Lab No.5 Answer {41*'='}")
+#     num = 1
+#     if lt.size(oldestArtworks) >= n:
+#         print(f"Las {n} obras más antiguas con la técnica {medium} son: ")
+#         print("Nota: para ordenar solo se tienen en cuenta las obras con fecha disponible")
+#         for i in lt.iterator(oldestArtworks):
+#             if i["Date"] == 0:                 
+#                 continue
+#             else:
+#                 print('')
+#                 print(f"{num}. {i}")
+#                 if num == n:
+#                     break
+#                 num += 1
+#         print('')
+#     else:
+#         print(f"Solo se encontraron {lt.size(oldestArtworks)} obras con la técnica {medium}, estas son: ")
+#         for i in lt.iterator(oldestArtworks):
+#             print('')
+#             print(f"{num}. {i}")
+#             num += 1
+#         print('')
 
 
-def printnumArtworks (total, nacionalidad):
-    print('')
-    print(f"{41*'='} Req. Lab No.6 Answer {41*'='}")
-    print(f"La nacionalidad '{nacionalidad}' tiene un numero total de obras de: {total}")
-    print("")
+# def printnumArtworks (total, nacionalidad):
+#     print('')
+#     print(f"{41*'='} Req. Lab No.6 Answer {41*'='}")
+#     print(f"La nacionalidad '{nacionalidad}' tiene un numero total de obras de: {total}")
+#     print("")
 
 """
 Menu principal
@@ -97,29 +102,34 @@ while True:
         loadData(catalog)
         
     elif int(inputs[0]) == 2:
-        print('')
-        try:
-            n = int(input("Ingrese el número de obras: "))
-        except:
-            print("Pruebe con un número entero positivo")
-            print('')
-            continue
-        medium = input("Ingrese el medio: ")
-        artworks = controller.nArtworksOldestByMedium(catalog, n, medium)
-        if artworks:
-            printnArtworksOldestByMedium (artworks, n, medium)
-        else:
-            print("Pruebe con un medio disponible en el MoMA")
-            print('')
+        # print('')
+        # try:
+        #     n = int(input("Ingrese el número de obras: "))
+        # except:
+        #     print("Pruebe con un número entero positivo")
+        #     print('')
+        #     continue
+        # medium = input("Ingrese el medio: ")
+        # artworks = controller.nArtworksOldestByMedium(catalog, n, medium)
+        # if artworks:
+        #     printnArtworksOldestByMedium (artworks, n, medium)
+        # else:
+        #     print("Pruebe con un medio disponible en el MoMA")
+        #     print('')
+        iyear = int(input("Ingrese el año inicial: "))
+        fyear = int(input("Ingrese el año final: "))
+        artis_co = controller.getArtistsCronOrder(catalog, iyear, fyear)
+        #TODO con prettytable
+        # printArtistsCronOrder(artis_co, iyear, fyear) 
 
-    elif int(inputs[0]) == 3:
-        nacionalidad = input("Ingrese la nacionalidad: ")
-        numArtworks = controller.numArtworks(catalog, nacionalidad)
-        if numArtworks:
-            printnumArtworks(numArtworks, nacionalidad)
-        else:
-            print("Pruebe con una nacionalidad disponible en el MoMA")
-            print('')
+    # elif int(inputs[0]) == 3:
+    #     nacionalidad = input("Ingrese la nacionalidad: ")
+    #     numArtworks = controller.numArtworks(catalog, nacionalidad)
+    #     if numArtworks:
+    #         printnumArtworks(numArtworks, nacionalidad)
+    #     else:
+    #         print("Pruebe con una nacionalidad disponible en el MoMA")
+    #         print('')
 
     else:
         sys.exit(0)

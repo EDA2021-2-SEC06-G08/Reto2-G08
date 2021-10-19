@@ -50,18 +50,21 @@ def initCatalog():
 def loadData(catalog):
     loadArtists(catalog)
     loadArtworks(catalog)
+    sortArtists(catalog)
+    sortArtworks(catalog)
+    model.loadAnswers(catalog)
 
 """ Se suman los dos tiempo del decorador"""
 
 def loadArtists(catalog):
-    filename = cf.data_dir + "MoMa/Artists-utf8-large.csv"
+    filename = cf.data_dir + "MoMa/Artists-utf8-small.csv"
     input_file = csv.DictReader(open(filename, encoding="utf-8"))
     for artist in input_file:
         model.addArtist(catalog, artist)
 
 
 def loadArtworks(catalog):
-    filename= cf.data_dir + "MoMA/Artworks-utf8-large.csv"
+    filename= cf.data_dir + "MoMA/Artworks-utf8-small.csv"
     input_file = csv.DictReader(open(filename, encoding="utf-8"))
     for artwork in input_file:
         model.addArtwork(catalog, artwork)
@@ -70,11 +73,20 @@ def loadArtworks(catalog):
 def sortArtworks(catalog):
     model.sortArtworks(catalog)
 
-# Funciones de consulta sobre el catálogo
-def  nArtworksOldestByMedium(catalog, n, medium):
-    return model.nArtworksOldestByMedium(catalog, n, medium)
+def sortArtists(catalog):
+    model.sortArtists(catalog)
 
-def numArtworks(catalog, nacionalidad):
-    return model.numArtworks(catalog, nacionalidad)
+# Funciones de consulta sobre el catálogo
+# def  nArtworksOldestByMedium(catalog, n, medium):
+#     return model.nArtworksOldestByMedium(catalog, n, medium)
+
+# def numArtworks(catalog, nacionalidad):
+#     return model.numArtworks(catalog, nacionalidad)
+
+def getArtistsCronOrder(catalog, iyear, fyear):
+    """
+    Retorna los datos de los artistas que estan en el rango de años pasados por parametro
+    """
+    return model.getArtistsCronOrder(catalog, iyear, fyear)
 
 
