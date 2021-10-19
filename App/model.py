@@ -205,7 +205,7 @@ def numArtworks(catalog, nacionalidad):
 
     """las n obras más
 antiguas para un medio específico"""
-
+@timer
 def getArtistsCronOrder(catalog, iyear, fyear):
     datos = {"NumTot":0,
             "Primeros3":lt.newList("ARRAY_LIST"),
@@ -253,7 +253,7 @@ def ceilSearch(value, list, key):
             upper = mid - 1 
     return ceil, False
 
-
+@timer
 def getArtworksCronOrder(catalog, idate, fdate):
     idate = toDate(idate)
     fdate = toDate(fdate)
@@ -352,6 +352,25 @@ def classifyByNation(catalog):
     country = mp.get(UniqueNats, countryMost)
     res = (top10, country)
     return res
+def compareelements(elem1, elem2, ascending, key):
+    if ascending:
+        return elem1[key] < elem2[key]
+    else:
+        return elem1[key] > elem2[key]
+
+
+def top5elements(array, key, ascending=False):
+    res = None
+    for i in range(1,6):
+        k = i
+        for j in range(i+1, lt.size(array)+1):
+            pos = j
+            if compareelements(lt.getElement(array, pos), lt.getElement(array,k), ascending, key):
+                k = pos
+        lt.exchange(array,i,k)
+    res = lt.subList(array, 1,5)
+    return res
+@timer           
 def transportArtwDepartment(catalog, department):
     res = {
             "Tot":0,
@@ -381,10 +400,11 @@ def transportArtwDepartment(catalog, department):
                 lt.addLast(antiguas, adjust)
             lt.addLast(precio, adjust)
         res["Tot"] = lt.size(lista)
-        ms.sort(antiguas, lambda elem1, elem2: elem1["Date"] < elem2["Date"])
-        ms.sort(precio, lambda elem1, elem2: elem1["Cost"] > elem2["Cost"])
-        res["5oldest"] = lt.subList(antiguas,1, 5)
-        res["5priciest"] = lt.subList(precio, 1, 5)
+        # ms.sort(antiguas, lambda elem1, elem2: elem1["Date"] < elem2["Date"])
+        # ms.sort(precio, lambda elem1, elem2: elem1["Cost"] > elem2["Cost"])
+        
+        res["5oldest"] = top5elements(antiguas, "Date", True)
+        res["5priciest"] = top5elements(precio, "Cost", False)
             
     else:
         res = False

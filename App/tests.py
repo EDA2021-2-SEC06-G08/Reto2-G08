@@ -29,13 +29,19 @@ def loadReq(catalog):
 
 calcCost = model.calculateCost
 
-# with open(r"C:\Users\camil\OneDrive\Desktop\Los Andes\5to Semestre\EDA\Retos\Reto2-G08\Data\catalogLarge", "rb") as file:
-#     catalog = pickle.load(file)
-catalog = ctl.initCatalog()
-loadData(catalog)
-ctl.sortArtists(catalog)
-ctl.sortArtworks(catalog)
-loadReq(catalog)
+with open(r"C:\Users\camil\OneDrive\Desktop\Los Andes\5to Semestre\EDA\Retos\Reto2-G08\Data\catalogLarge", "rb") as file:
+    catalog = pickle.load(file)
+# catalog = ctl.initCatalog()
+# loadData(catalog)
+# ctl.sortArtists(catalog)
+# ctl.sortArtworks(catalog)
+# loadReq(catalog)
+
+x = 5
+
+
+
+
 
 
 

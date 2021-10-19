@@ -180,6 +180,9 @@ while True:
         print('')
         catalog = initCatalog()
         loadData(catalog)
+        print(f"Se cargaron {lt.size(catalog['artists'])} artistas")
+        print("")
+        print(f"Se cargaron {lt.size(catalog['artworks'])} obras")
         
     elif int(inputs[0]) == 2:
         try:
