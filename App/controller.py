@@ -41,12 +41,11 @@ El controlador se encarga de mediar entre la vista y el modelo.
 """
 
 # Inicialización del Catálogo
-@timer
 def initCatalog():
     return model.newCatalog()
 
 # Funciones para la carga de datos
-@timer
+
 def loadData(catalog):
     loadArtists(catalog)
     loadArtworks(catalog)
@@ -88,5 +87,12 @@ def getArtistsCronOrder(catalog, iyear, fyear):
     Retorna los datos de los artistas que estan en el rango de años pasados por parametro
     """
     return model.getArtistsCronOrder(catalog, iyear, fyear)
+
+def getArtworksCronOrder(catalog, idate, fdate):
+
+    return model.getArtworksCronOrder(catalog, idate, fdate)
+
+def transportArtwDepartment(catalog, department):
+    return model.transportArtwDepartment(catalog, department)
 
 

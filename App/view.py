@@ -24,6 +24,7 @@ import config as cf
 import sys
 import controller
 from DISClib.ADT import list as lt
+from DISClib.DataStructures import mapentry as me
 assert cf
 
 
@@ -41,6 +42,7 @@ def printMenu():
     print("3- REQ. 2: Listar cronológicamente las adquisiciones")
     print("4. Req. 3")
     print("5. REQ. 4: Clasificar las obras por la nacionalidad de sus creadores")
+    print("6. REQ. 5: Transportar obras de un departamento")    
     print("0- Salir")
 
 def initCatalog():
@@ -56,6 +58,84 @@ def sortArtists(catalog):
     controller.sortArtists(catalog)
 
 # Funciones de impresión
+def printArtistsCronOrder(data, iyear, fyear):
+    print(f"Artistas en orden cronologico desde {iyear} hasta {fyear}")
+    print(f"Numero total de artistas en el rango de años: {data['NumTot']}")
+    print("\n")
+    print("Primeros 3 artistas rango:")
+    print("\n")
+    for artista in lt.iterator(data["Primeros3"]):
+        print(f"- {artista['DisplayName']} is a {artista['Gender']} {artista['Nationality']} artist borned in the year {artista['BeginDate']}", end=" ")
+        print(f"and died in {artista['EndDate']}" if artista["EndDate"] != 0 else "and hasn't died.")
+    print("-"*100)
+    print("Ultimos 3 artistas del rango:")
+    print("\n")
+    for artista in lt.iterator(data["Ultimos3"]):
+        print(f"- {artista['DisplayName']} is a {artista['Gender']} {artista['Nationality']} artist borned in the year {artista['BeginDate']}", end=" ")
+        print(f"and died in {artista['EndDate']}" if artista["EndDate"] != 0 else "and hasn't died.")
+    print("\n")
+
+def printArtworksCronOrder(data, idate, fdate):
+    print(f"Obras adquiridas en orden cronologico desde la fecha {idate} hasta {fdate}")
+    print(f"Numero total de obras en el rango de fechas: {data['NumTot']} por {data['NumArtistas']} artistas diferentes")
+    print(f"De las cuales se adquirieron {data['Purchase']} por modo de compra (Purchase)")
+    print("-"*100)
+    print("Primeras 3 obras del rango:")
+    print("")
+    for obra in lt.iterator(data["Primeros3"]):
+        nombres = ", ".join(name for name in lt.iterator(obra['ArtistsNames']))
+        print(f"{obra['Title']} por {nombres}, fecha: {obra['Date']}, Medio: {obra['Medium']}, Dimensiones: {obra['Dimensions']}")
+        print("")
+    print("-"*100)
+    print("Ultimas 3 obras del rango")
+    print("")
+    for obra in lt.iterator(data["Ultimos3"]):
+        nombres = ", ".join(name for name in lt.iterator(obra['ArtistsNames']))
+        print(f"{obra['Title']} por {nombres}, fecha: {obra['Date']}, Medio: {obra['Medium']}, Dimensiones: {obra['Dimensions']}")
+        print("")
+
+def printClasificationByNation(data):
+    print(f"{'='*16} Req No. 4 Inputs {'='*16}")
+    print(f"Ranking countries by their number of artworks in the MoMa. . .")
+    print("\n")
+    print(f"{'='*16} Req No. 4 Answer {'='*16}")
+    print("The TOP 10 Countries in the MoMA are:")
+    print("\n")
+    print("-"*24)
+    print(f" Nationality | Artworks ")
+    for i, vals in enumerate(lt.iterator(data[0])):
+        if i > 9:
+            break
+        print("-"*24)
+        print(f"{(vals[0].strip() if vals[0] != '' else 'Unknown').center(13,' ')}|{str(vals[1]).center(10, ' ')}")
+    print("-"*24)
+    print("\n")
+    print(f"The TOP nacionality in the museum is: {data[1]['key']} with {lt.size(me.getValue(data[1]))} unique pieces.")
+    print("-"*100)
+    print("the first and last 3 objects in the american list are:")
+    for j in range(1,4):
+        i = lt.getElement(me.getValue(data[1]),j)
+        print(f" Title: {i['Title']}, Artists: {', '.join(lt.iterator(i['ArtistsNames']))}, Date: {i['Date'] if i['Date'] != 0 else 'Unknown'}, Dimensions: {i['Dimensions'] if i['Dimensions'] != None and i['Dimensions'] != '' else 'Unknown' } ")
+    for j in range(lt.size(me.getValue(data[1]))-2, lt.size(me.getValue(data[1]))+1):
+        i = lt.getElement(me.getValue(data[1]), j)
+        print(f" Title: {i['Title']}, Artists: {', '.join(lt.iterator(i['ArtistsNames']))}, Date: {i['Date'] if i['Date'] != 0 else 'Unknown'}, Dimensions: {i['Dimensions'] if i['Dimensions'] != None and i['Dimensions'] != '' else 'Unknown' } ")
+    print("")
+
+def printTransportArtwDepartment(data, department):
+    print(f"The MoMA is going to transport {data['Tot']} from {department}")
+    print(f"Estimated cargo weight (kg): {data['Weight']}")
+    print(f"Estimated cargo cost (USD): {data['Cost']}")
+    print("")
+    print("The TOP 5 most expensive items to transport are:")
+    print("")
+    for i in lt.iterator(data["5priciest"]):
+        print(f'Title: {i["Title"]}, Artists: {", ".join(i["Artists"])}, Classification: {i["Classification"]}, Date: {i["Date"]}, Medium: {i["Medium"]}, Dimensions: {i["Dimensions"]}, Cost: {i["Cost"]}')
+        print("")
+    print("The TOP 5 oldests items to transport are:")
+    for i in lt.iterator(data["5oldest"]):
+        print(f'Title: {i["Title"]}, Artists: {", ".join(i["Artists"])}, Classification: {i["Classification"]}, Date: {i["Date"]}, Medium: {i["Medium"]}, Dimensions: {i["Dimensions"]}, Cost: {i["Cost"]}')
+        print("")
+
 # def printnArtworksOldestByMedium(oldestArtworks, n, medium):
 #     print('')
 #     print(f"{41*'='} Req. Lab No.5 Answer {41*'='}")
@@ -102,34 +182,36 @@ while True:
         loadData(catalog)
         
     elif int(inputs[0]) == 2:
-        # print('')
-        # try:
-        #     n = int(input("Ingrese el número de obras: "))
-        # except:
-        #     print("Pruebe con un número entero positivo")
-        #     print('')
-        #     continue
-        # medium = input("Ingrese el medio: ")
-        # artworks = controller.nArtworksOldestByMedium(catalog, n, medium)
-        # if artworks:
-        #     printnArtworksOldestByMedium (artworks, n, medium)
-        # else:
-        #     print("Pruebe con un medio disponible en el MoMA")
-        #     print('')
-        iyear = int(input("Ingrese el año inicial: "))
-        fyear = int(input("Ingrese el año final: "))
-        artis_co = controller.getArtistsCronOrder(catalog, iyear, fyear)
-        #TODO con prettytable
-        # printArtistsCronOrder(artis_co, iyear, fyear) 
+        try:
+            iyear = int(input("Ingrese el año inicial: "))
+            fyear = int(input("Ingrese el año final: "))
+            artis_co = controller.getArtistsCronOrder(catalog, iyear, fyear)
+            printArtistsCronOrder(artis_co, iyear, fyear)
+        except:
+            print("No ingreso años validos")
 
-    # elif int(inputs[0]) == 3:
-    #     nacionalidad = input("Ingrese la nacionalidad: ")
-    #     numArtworks = controller.numArtworks(catalog, nacionalidad)
-    #     if numArtworks:
-    #         printnumArtworks(numArtworks, nacionalidad)
-    #     else:
-    #         print("Pruebe con una nacionalidad disponible en el MoMA")
-    #         print('')
+    elif int(inputs[0]) == 3:
+        idate = input("Ingrese la fecha inicial (AAAA-MM-DD): ")
+        fdate = input("Ingrese la fecha final (AAAA-MM-DD): ")
+        try:
+            adquis_co = controller.getArtworksCronOrder(catalog, idate, fdate)
+            printArtworksCronOrder(adquis_co, idate, fdate)
+        except:
+            print("No ingreso fechas validas")
+
+    elif int(inputs[0]) == 4:
+        pass
+
+    elif int(inputs[0]) == 5:
+        printClasificationByNation(catalog["Req4"])
+
+    elif int(inputs[0]) == 6:
+        department = input("Ingrese el departamento: ")
+        transport = controller.transportArtwDepartment(catalog, department)
+        if transport:
+            printTransportArtwDepartment(transport, department)
+        else:
+            print("No ingreso un departamento del museo")
 
     else:
         sys.exit(0)

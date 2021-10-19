@@ -68,16 +68,16 @@ def newCatalog():
     """
     Este índice crea un map cuya llave es el medio/técnica de la obra, se asume que cada medio tenga unas 4 obras 
     """
-    catalog['medium'] = mp.newMap(138112//16,
-                                   maptype='PROBING',
-                                   loadfactor=0.8)
+    # catalog['medium'] = mp.newMap(138112//16,
+    #                                maptype='PROBING',
+    #                                loadfactor=0.8)
     
     """
     Este índice crea un map cuya llave es la nacionalidad de la obra, hay 195 paises en el mundo 
     """
-    catalog['Nationality'] = mp.newMap(195//4,
-                                   maptype='PROBING',
-                                   loadfactor=0.8)
+    # catalog['Nationality'] = mp.newMap(195//4,
+    #                                maptype='PROBING',
+    #                                loadfactor=0.8)
     
     """
     Este índice crea un map cuya llave es id del artista, hay 15220 artistas
@@ -85,6 +85,10 @@ def newCatalog():
     catalog['ConstID'] = mp.newMap(15220//4,
                                    maptype='CHAINING',
                                    loadfactor=4.0)
+
+    # Hay 8 departamento en el museo
+    catalog["Department"] = mp.newMap(8, maptype='PROBING', loadfactor=0.5)
+    
     catalog["Req4"] = None
 
     return catalog
@@ -125,26 +129,32 @@ def addArtwork(catalog, artwork):
         "Seat Height (cm)":toFloat(artwork["Seat Height (cm)"]) }
 
     lt.addLast(catalog["artworks"], filtered)
-    if mp.contains(catalog['medium'], filtered['Medium']):
-        pareja = mp.get(catalog['medium'], filtered['Medium'])
-        lt.addLast(me.getValue(pareja), filtered)
-    else:
-        mp.put(catalog['medium'], filtered['Medium'], lt.newList('ARRAY_LIST'))
-        pareja = mp.get(catalog['medium'], filtered['Medium'])
-        lt.addLast(me.getValue(pareja), filtered)
+    # if mp.contains(catalog['medium'], filtered['Medium']):
+    #     pareja = mp.get(catalog['medium'], filtered['Medium'])
+    #     lt.addLast(me.getValue(pareja), filtered)
+    # else:
+    #     mp.put(catalog['medium'], filtered['Medium'], lt.newList('ARRAY_LIST'))
+    #     pareja = mp.get(catalog['medium'], filtered['Medium'])
+    #     lt.addLast(me.getValue(pareja), filtered)
 
-    for artistID in filtered["ConstituentID"] :
-        pareja = mp.get(catalog['ConstID'], artistID)
-        artista = me.getValue(pareja) 
-        nacionalidad = artista["Nationality"] 
+    if mp.contains(catalog["Department"], filtered["Department"]):
+        lt.addLast(me.getValue(mp.get(catalog["Department"], filtered["Department"])), filtered)
+    else:
+        mp.put(catalog["Department"], filtered["Department"], lt.newList("ARRAY_LIST"))
+        lt.addLast(me.getValue(mp.get(catalog["Department"], filtered["Department"])), filtered)
+
+    # for artistID in filtered["ConstituentID"] :
+    #     pareja = mp.get(catalog['ConstID'], artistID)
+    #     artista = me.getValue(pareja) 
+    #     nacionalidad = artista["Nationality"] 
         
-        if mp.contains(catalog['Nationality'], nacionalidad):
-            pareja = mp.get(catalog['Nationality'], nacionalidad)
-            lt.addLast(me.getValue(pareja), filtered)
-        else:
-            mp.put(catalog['Nationality'], nacionalidad, lt.newList('ARRAY_LIST'))
-            pareja = mp.get(catalog['Nationality'], nacionalidad)
-            lt.addLast(me.getValue(pareja), filtered)
+    #     if mp.contains(catalog['Nationality'], nacionalidad):
+    #         pareja = mp.get(catalog['Nationality'], nacionalidad)
+    #         lt.addLast(me.getValue(pareja), filtered)
+    #     else:
+    #         mp.put(catalog['Nationality'], nacionalidad, lt.newList('ARRAY_LIST'))
+    #         pareja = mp.get(catalog['Nationality'], nacionalidad)
+    #         lt.addLast(me.getValue(pareja), filtered)
 
 def loadAnswers(catalog):
     catalog["Req4"] = classifyByNation(catalog)
@@ -289,6 +299,8 @@ def getArtworksCronOrder(catalog, idate, fdate):
             name = mp.get(catalog["ConstID"], id)["value"]["DisplayName"]
             lt.addLast(filtrado["ArtistsNames"], name)
         lt.addLast(res["Ultimos3"], filtrado)
+        
+    return res
 
 
 def classifyByNation(catalog):
@@ -340,8 +352,73 @@ def classifyByNation(catalog):
     country = mp.get(UniqueNats, countryMost)
     res = (top10, country)
     return res
+def transportArtwDepartment(catalog, department):
+    res = {
+            "Tot":0,
+            "Cost":0,
+            "Weight":0,
+            "5oldest": None,
+            "5priciest":None
+    }
+    listDepartments = mp.get(catalog["Department"], department)
+    if listDepartments:
+        lista = me.getValue(listDepartments)
+        antiguas = lt.newList("ARRAY_LIST")
+        precio = lt.newList("ARRAY_LIST")
+        for obra in lt.iterator(lista):
+            if obra["Weight (kg)"]:
+                res["Weight"] += obra["Weight (kg)"]
+            cost = calculateCost(obra)
+            res["Cost"] += cost
+            artistas = lt.newList("ARRAY_LIST")
+            for id in obra["ConstituentID"]:
+                nombre = mp.get(catalog["ConstID"],id)
+                lt.addLast(artistas, nombre)
+            adjust = {key:value for key,value in obra.items() if key != "ConstituentID"}
+            adjust["Cost"] = cost
+            adjust["Artists"] = artistas
+            if obra["Date"] != 0:
+                lt.addLast(antiguas, adjust)
+            lt.addLast(precio, adjust)
+        res["Tot"] = lt.size(lista)
+        ms.sort(antiguas, lambda elem1, elem2: elem1["Date"] < elem2["Date"])
+        ms.sort(precio, lambda elem1, elem2: elem1["Cost"] > elem2["Cost"])
+        res["5oldest"] = lt.subList(antiguas,1, 5)
+        res["5priciest"] = lt.subList(precio, 1, 5)
+            
+    else:
+        res = False
 
+    return res
 
+def calculateCost(obra):
+    costos = {"Kg":0, "M^2caj1":0,"M^2caj2":0, "M^3caj":0,"M^2cir":0, "M^3cir":0 }
+    #Se hice casi todos los caso excepto el volumen con depth
+    if obra["Weight (kg)"]:
+        costos["Kg"] = 72*obra["Weight (kg)"]
+    if obra["Length (cm)"] and obra["Height (cm)"] and obra["Width (cm)"]:
+        costos["M^3caj"] = 72*((obra["Length (cm)"]/100) * (obra["Height (cm)"]/100) * (obra["Width (cm)"]/100))
+    if obra["Length (cm)"] and obra["Height (cm)"]:
+        costos["M^2caj1"] = 72*((obra["Length (cm)"]/100)*(obra["Height (cm)"]/100))
+    if obra["Width (cm)"] and obra["Height (cm)"]:
+        costos["M^2caj2"] = 72*((obra["Width (cm)"]/100) * (obra["Height (cm)"]/100))
+    if obra["Width (cm)"] and obra["Length (cm)"]:
+        costos["M^2caj3"] = 72*((obra["Width (cm)"]/100) * (obra["Length (cm)"]/100)) 
+    if obra["Diameter (cm)"] and obra["Depth (cm)"]:
+        costos["M^3cir"] = 72*(((obra["Diameter (cm)"]/100/2)**2) * pi * (obra["Depth (cm)"]/100))
+    if obra["Diameter (cm)"] and obra["Height (cm)"]:
+        costos["M^3cir1"] = 72*(((obra["Diameter (cm)"]/100/2)**2) * pi * (obra["Height (cm)"]/100))
+    if obra["Diameter (cm)"]:
+        costos["M^2cir"] = 72*(((obra["Diameter (cm)"]/100/2)**2) * pi)
+    
+    maxi = 0
+    for valor in costos.values():
+        if valor > maxi:
+            maxi = valor
+    if maxi == 0:
+        return 48.0
+    else:
+        return maxi  
 
 
 # Funciones utilizadas para comparar elementos dentro de una lista
