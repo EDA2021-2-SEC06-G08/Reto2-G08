@@ -344,7 +344,7 @@ def getArtworksByMedium(catalog, name):
     lista = me.getValue(mp.get(catalog["IDandArtworks"], constid))
     data["TotObras"] = lt.size(lista)
 
-    mapMedium = mp.newMap(data["TotObras"],   #asumiendo que cada medio tenga dos obras en promedio
+    mapMedium = mp.newMap(data["TotObras"],   #asumiendo que cada medio tenga por lo menos dos obras
                             maptype='PROBING',
                             loadfactor=0.5)
     mayor = 0
