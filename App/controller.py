@@ -56,14 +56,14 @@ def loadData(catalog):
 """ Se suman los dos tiempo del decorador"""
 
 def loadArtists(catalog):
-    filename = cf.data_dir + "MoMa/Artists-utf8-30pct.csv"
+    filename = cf.data_dir + "MoMa/Artists-utf8-large.csv"
     input_file = csv.DictReader(open(filename, encoding="utf-8"))
     for artist in input_file:
         model.addArtist(catalog, artist)
 
 
 def loadArtworks(catalog):
-    filename= cf.data_dir + "MoMA/Artworks-utf8-30pct.csv"
+    filename= cf.data_dir + "MoMA/Artworks-utf8-large.csv"
     input_file = csv.DictReader(open(filename, encoding="utf-8"))
     for artwork in input_file:
         model.addArtwork(catalog, artwork)
@@ -91,6 +91,9 @@ def getArtistsCronOrder(catalog, iyear, fyear):
 def getArtworksCronOrder(catalog, idate, fdate):
 
     return model.getArtworksCronOrder(catalog, idate, fdate)
+
+def getArtworksByMedium(catalog, name):
+    return model.getArtworksByMedium(catalog, name)
 
 def transportArtwDepartment(catalog, department):
     return model.transportArtwDepartment(catalog, department)

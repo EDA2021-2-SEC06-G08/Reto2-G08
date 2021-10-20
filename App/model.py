@@ -91,6 +91,14 @@ def newCatalog():
     
     catalog["Req4"] = None
 
+    catalog["Name"] = mp.newMap(15220*2,
+                                   maptype='PROBING',
+                                   loadfactor=0.5)
+
+    catalog["IDandArtworks"] = mp.newMap(15220*2,
+                                   maptype='PROBING',
+                                   loadfactor=0.5)
+
     return catalog
 
 # Funciones para agregar informacion al catalogo
@@ -108,6 +116,12 @@ def addArtist(catalog, artist):
         pass
     else:
         mp.put(catalog['ConstID'], filtered['ConstituentID'], filtered)
+    
+    if mp.contains(catalog['Name'], filtered['DisplayName']):
+        pass
+    else:
+        mp.put(catalog['Name'], filtered['DisplayName'], filtered["ConstituentID"])
+
 
 def addArtwork(catalog, artwork):
     filtered = {"Title":artwork["Title"], 
@@ -136,6 +150,14 @@ def addArtwork(catalog, artwork):
     #     mp.put(catalog['medium'], filtered['Medium'], lt.newList('ARRAY_LIST'))
     #     pareja = mp.get(catalog['medium'], filtered['Medium'])
     #     lt.addLast(me.getValue(pareja), filtered)
+
+    for constID in filtered["ConstituentID"]:
+        if mp.contains(catalog["IDandArtworks"], constID):
+            lt.addLast(me.getValue(mp.get(catalog["IDandArtworks"], constID)), filtered)
+        else:
+            mp.put(catalog["IDandArtworks"], constID, lt.newList("ARRAY_LIST"))
+            lt.addLast(me.getValue(mp.get(catalog["IDandArtworks"], constID)), filtered)
+
 
     if mp.contains(catalog["Department"], filtered["Department"]):
         lt.addLast(me.getValue(mp.get(catalog["Department"], filtered["Department"])), filtered)
@@ -302,6 +324,53 @@ def getArtworksCronOrder(catalog, idate, fdate):
         
     return res
 
+@timer
+def getArtworksByMedium(catalog, name):
+    data = {"TotObras": None,  
+            "TotMedios": None,
+            "MedMasUsado": None,
+            "constID": None,
+            "num_mayor": None,
+            "ObrasMedMasUsado": None,
+            "3primeras": None,
+            "3ultimas": None}
+    try:
+        pareja = mp.get(catalog["Name"], name)
+        constid = me.getValue(pareja)
+        data["constID"] = constid
+    except:
+        return False
+
+    lista = me.getValue(mp.get(catalog["IDandArtworks"], constid))
+    data["TotObras"] = lt.size(lista)
+
+    mapMedium = mp.newMap(data["TotObras"],   #asumiendo que cada medio tenga dos obras en promedio
+                            maptype='PROBING',
+                            loadfactor=0.5)
+    mayor = 0
+    for obra in lt.iterator(lista):
+        if mp.contains(mapMedium, obra["Medium"]):
+            dicc = dicc = {"Titulo": obra["Title"], "Fecha de la obra": obra["Date"], "Medio": obra["Medium"], "Dimensiones": obra["Dimensions"]}
+            lt.addLast(me.getValue(mp.get(mapMedium, obra["Medium"])), dicc)
+        else:
+            dicc = dicc = {"Titulo": obra["Title"], "Fecha de la obra": obra["Date"], "Medio": obra["Medium"], "Dimensiones": obra["Dimensions"]}
+            mp.put(mapMedium, obra["Medium"], lt.newList("ARRAY_LIST"))
+            lt.addLast(me.getValue(mp.get(mapMedium, obra["Medium"])), dicc)
+        tamaño = lt.size(me.getValue(mp.get(mapMedium, obra["Medium"])))
+        if tamaño > mayor:
+            mayor = tamaño
+            data["MedMasUsado"] = obra["Medium"]
+    data["TotMedios"] = mp.size(mapMedium)
+    data["num_mayor"] = mayor
+    data["ObrasMedMasUsado"] = me.getValue(mp.get(mapMedium, data["MedMasUsado"]))
+
+    if mayor >= 3:
+        ms.sort(data["ObrasMedMasUsado"], cmpArworksByDate2)
+        data["3primeras"] = lt.subList(data["ObrasMedMasUsado"], 1, 3)
+        data["3ultimas"] = lt.subList(data["ObrasMedMasUsado"], lt.size(data["ObrasMedMasUsado"])-2, 3)
+
+    return data
+
 
 def classifyByNation(catalog):
     UniqueNats = mp.newMap(195, maptype='PROBING',loadfactor=0.5)
@@ -443,7 +512,10 @@ def calculateCost(obra):
 
 # Funciones utilizadas para comparar elementos dentro de una lista
 def cmpArworksByDate(medium1, medium2):
-    return medium1["Date"] < medium2["Date"]   
+    return medium1["Date"] < medium2["Date"]  
+
+def cmpArworksByDate2(artwork1, artwork2):
+    return artwork1["Fecha de la obra"] < artwork2["Fecha de la obra"] 
 
 def cmpArtistsbyDate(artist1, artist2):
     return artist1["BeginDate"] < artist2["BeginDate"]
