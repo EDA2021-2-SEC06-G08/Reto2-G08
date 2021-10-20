@@ -42,7 +42,8 @@ def printMenu():
     print("3- REQ. 2: Listar cronológicamente las adquisiciones")
     print("4. REQ. 3: Clasificar las obras de un artista por técnica")
     print("5. REQ. 4: Clasificar las obras por la nacionalidad de sus creadores")
-    print("6. REQ. 5: Transportar obras de un departamento")    
+    print("6. REQ. 5: Transportar obras de un departamento")  
+    print("7. BONO: Encontrar los artistas más prolíficos del museo")  
     print("0- Salir")
 
 def initCatalog():
@@ -164,6 +165,11 @@ def printTransportArtwDepartment(data, department):
         print(f'Title: {i["Title"]}, Artists: {", ".join(i["Artists"])}, Classification: {i["Classification"]}, Date: {i["Date"]}, Medium: {i["Medium"]}, Dimensions: {i["Dimensions"]}, Cost: {i["Cost"]}')
         print("")
 
+
+def printArtistasProlificos(prolificos, numArtist, iyear, fyear):
+    
+    pass
+
 # def printnArtworksOldestByMedium(oldestArtworks, n, medium):
 #     print('')
 #     print(f"{41*'='} Req. Lab No.5 Answer {41*'='}")
@@ -249,6 +255,16 @@ while True:
             printTransportArtwDepartment(transport, department)
         else:
             print("No ingreso un departamento del museo")
+        
+    elif int(inputs[0]) == 7:
+        try:
+            numArtist = int(input("Ingrese el número de artistas que desea en la clasificación: "))
+            iyear = int(input("Ingrese el año inicial: "))
+            fyear = int(input("Ingrese el año final: "))
+            prolificos = controller.artistasProlificos(numArtist, iyear, fyear)
+            printArtistasProlificos(prolificos, numArtist, iyear, fyear)
+        except:
+            print("Ingrese numeros enteros válidos")   
 
     else:
         sys.exit(0)

@@ -341,19 +341,19 @@ def getArtworksByMedium(catalog, name):
     except:
         return False
 
-    lista = me.getValue(mp.get(catalog["IDandArtworks"], constid))
-    data["TotObras"] = lt.size(lista)
+    listaObras = me.getValue(mp.get(catalog["IDandArtworks"], constid))
+    data["TotObras"] = lt.size(listaObras)
 
     mapMedium = mp.newMap(data["TotObras"],   #asumiendo que cada medio tenga por lo menos dos obras
                             maptype='PROBING',
                             loadfactor=0.5)
     mayor = 0
-    for obra in lt.iterator(lista):
+    for obra in lt.iterator(listaObras):
         if mp.contains(mapMedium, obra["Medium"]):
-            dicc = dicc = {"Titulo": obra["Title"], "Fecha de la obra": obra["Date"], "Medio": obra["Medium"], "Dimensiones": obra["Dimensions"]}
+            dicc = {"Titulo": obra["Title"], "Fecha de la obra": obra["Date"], "Medio": obra["Medium"], "Dimensiones": obra["Dimensions"]}
             lt.addLast(me.getValue(mp.get(mapMedium, obra["Medium"])), dicc)
         else:
-            dicc = dicc = {"Titulo": obra["Title"], "Fecha de la obra": obra["Date"], "Medio": obra["Medium"], "Dimensiones": obra["Dimensions"]}
+            dicc = {"Titulo": obra["Title"], "Fecha de la obra": obra["Date"], "Medio": obra["Medium"], "Dimensiones": obra["Dimensions"]}
             mp.put(mapMedium, obra["Medium"], lt.newList("ARRAY_LIST"))
             lt.addLast(me.getValue(mp.get(mapMedium, obra["Medium"])), dicc)
         tamaño = lt.size(me.getValue(mp.get(mapMedium, obra["Medium"])))
@@ -371,7 +371,7 @@ def getArtworksByMedium(catalog, name):
 
     return data
 
-
+@timer
 def classifyByNation(catalog):
     UniqueNats = mp.newMap(195, maptype='PROBING',loadfactor=0.5)
     NumANats = mp.newMap(195, maptype='PROBING',loadfactor=0.5)
@@ -439,6 +439,7 @@ def top5elements(array, key, ascending=False):
         lt.exchange(array,i,k)
     res = lt.subList(array, 1,5)
     return res
+
 @timer           
 def transportArtwDepartment(catalog, department):
     res = {
@@ -508,6 +509,14 @@ def calculateCost(obra):
         return 48.0
     else:
         return maxi  
+
+@timer
+def artistasProlificos(numArtist, iyear, fyear):
+    
+
+
+
+    return data
 
 
 # Funciones utilizadas para comparar elementos dentro de una lista
