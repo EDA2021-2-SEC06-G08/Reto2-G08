@@ -363,9 +363,9 @@ def getArtworksByMedium(catalog, name):
     data["TotMedios"] = mp.size(mapMedium)
     data["num_mayor"] = mayor
     data["ObrasMedMasUsado"] = me.getValue(mp.get(mapMedium, data["MedMasUsado"]))
+    ms.sort(data["ObrasMedMasUsado"], cmpArworksByDate2)
 
     if mayor >= 3:
-        ms.sort(data["ObrasMedMasUsado"], cmpArworksByDate2)
         data["3primeras"] = lt.subList(data["ObrasMedMasUsado"], 1, 3)
         data["3ultimas"] = lt.subList(data["ObrasMedMasUsado"], lt.size(data["ObrasMedMasUsado"])-2, 3)
 
