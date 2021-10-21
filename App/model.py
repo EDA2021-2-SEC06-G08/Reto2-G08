@@ -118,12 +118,6 @@ def addArtist(catalog, artist):
 
     lt.addLast(catalog["artists"], filtered)
 
-    if mp.contains(catalog["Nacimiento"], filtered["BeginDate"]):
-        lt.addLast(me.getValue(mp.get(catalog["Nacimiento"], filtered["BeginDate"])), filtered["DisplayName"])
-    else:
-        mp.put(catalog["Nacimiento"], filtered["BeginDate"], lt.newList("ARRAY_LIST"))
-        lt.addLast(me.getValue(mp.get(catalog["Nacimiento"], filtered["BeginDate"])), filtered["DisplayName"])
-
 
     if mp.contains(catalog['ConstID'], filtered['ConstituentID']):
         pass
