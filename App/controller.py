@@ -92,7 +92,12 @@ def getArtworksCronOrder(catalog, idate, fdate):
 
     return model.getArtworksCronOrder(catalog, idate, fdate)
 
+def getArtworksByMedium(catalog, name):
+    return model.getArtworksByMedium(catalog, name)
+
 def transportArtwDepartment(catalog, department):
     return model.transportArtwDepartment(catalog, department)
 
+def artistasProlificos(numArtist, iyear, fyear):
+    return model.artistasProlificos(numArtist, iyear, fyear)
 

@@ -40,9 +40,10 @@ def printMenu():
     print("1- Cargar información en el catálogo")
     print("2- REQ. 1: Listar cronológicamente los artistas ")
     print("3- REQ. 2: Listar cronológicamente las adquisiciones")
-    print("4. Req. 3")
+    print("4. REQ. 3: Clasificar las obras de un artista por técnica")
     print("5. REQ. 4: Clasificar las obras por la nacionalidad de sus creadores")
-    print("6. REQ. 5: Transportar obras de un departamento")    
+    print("6. REQ. 5: Transportar obras de un departamento")  
+    print("7. BONO: Encontrar los artistas más prolíficos del museo")  
     print("0- Salir")
 
 def initCatalog():
@@ -94,6 +95,34 @@ def printArtworksCronOrder(data, idate, fdate):
         print(f"{obra['Title']} por {nombres}, fecha: {obra['Date']}, Medio: {obra['Medium']}, Dimensiones: {obra['Dimensions']}")
         print("")
 
+def printArtworksByMedium(data, name):
+    print(f"{41*'='} Req. No.3 Inputs {41*'='}")
+    print(f"Examine the work of the artist named: {name}")
+    print(f"{41*'='} Req. No.3 Answer {41*'='}")
+    print(f"{name} with MoMA ID {data['constID']} has {data['TotObras']} pieces in his/her name at the museum.")
+    print(f"There are {data['TotMedios']} different mediums/techniques in his/her work.\n")
+    print(f"His/her most used Medium/Technique is {data['MedMasUsado']} with {lt.size(data['ObrasMedMasUsado'])} pieces.")
+    if lt.size(data["ObrasMedMasUsado"]) <3:
+        print(f"These pieces are:")
+        print(100*"=")
+        for artwork in lt.iterator(data["ObrasMedMasUsado"]): 
+            print(artwork) 
+        print(100*"=")
+        print("\n")
+    else:
+        print(f"The first 3 pieces are:")
+        print(100*"=")
+        for artwork in lt.iterator(data["3primeras"]): 
+            print(artwork) 
+        print(100*"=")
+        print("\n")
+        print(f"The last 3 pieces are:")
+        print(100*"=")
+        for artwork in lt.iterator(data["3ultimas"]): 
+            print(artwork) 
+        print(100*"=")
+        print("\n")
+
 def printClasificationByNation(data):
     print(f"{'='*16} Req No. 4 Inputs {'='*16}")
     print(f"Ranking countries by their number of artworks in the MoMa. . .")
@@ -135,6 +164,11 @@ def printTransportArtwDepartment(data, department):
     for i in lt.iterator(data["5oldest"]):
         print(f'Title: {i["Title"]}, Artists: {", ".join(i["Artists"])}, Classification: {i["Classification"]}, Date: {i["Date"]}, Medium: {i["Medium"]}, Dimensions: {i["Dimensions"]}, Cost: {i["Cost"]}')
         print("")
+
+
+def printArtistasProlificos(prolificos, numArtist, iyear, fyear):
+    
+    pass
 
 # def printnArtworksOldestByMedium(oldestArtworks, n, medium):
 #     print('')
@@ -203,7 +237,13 @@ while True:
             print("No ingreso fechas validas")
 
     elif int(inputs[0]) == 4:
-        pass
+        name = input("Ingrese el nombre del artista: ")
+        artworks_co = controller.getArtworksByMedium(catalog, name)
+        if artworks_co:
+            printArtworksByMedium(artworks_co, name)
+        else:
+            print("El artista especificado no esta en la base de datos")  
+            print("\n") 
 
     elif int(inputs[0]) == 5:
         printClasificationByNation(catalog["Req4"])
@@ -215,6 +255,16 @@ while True:
             printTransportArtwDepartment(transport, department)
         else:
             print("No ingreso un departamento del museo")
+        
+    elif int(inputs[0]) == 7:
+        try:
+            numArtist = int(input("Ingrese el número de artistas que desea en la clasificación: "))
+            iyear = int(input("Ingrese el año inicial: "))
+            fyear = int(input("Ingrese el año final: "))
+            prolificos = controller.artistasProlificos(numArtist, iyear, fyear)
+            printArtistasProlificos(prolificos, numArtist, iyear, fyear)
+        except:
+            print("Ingrese numeros enteros válidos")   
 
     else:
         sys.exit(0)
