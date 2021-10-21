@@ -624,7 +624,7 @@ def artistasProlificos(catalog, numArtist, iyear, fyear):
     ms.sort(lista, cmpArtistasreq6)
     nArtistasProlificos = lt.subList(lista, 1, numArtist) 
     prolifico = lt.getElement(lista, 1)
-    infoObras = soportereq6(catalog, prolifico("Nombre"))
+    infoObras = soportereq6(catalog, prolifico["Nombre"])
     if infoObras["5primeras"]:
         primeras5 = infoObras["5primeras"]
     else:
