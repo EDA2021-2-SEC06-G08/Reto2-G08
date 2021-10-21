@@ -34,7 +34,7 @@ from DISClib.Algorithms.Sorting import shellsort as sa
 assert cf
 from DISClib.Algorithms.Sorting import mergesort as ms
 from time import process_time as ptime 
-from datetime import date
+from datetime import date, timedelta as td
 from math import pi
 import re
 
@@ -89,7 +89,10 @@ def newCatalog():
 
     # Hay 8 departamento en el museo
     catalog["Department"] = mp.newMap(8, maptype='PROBING', loadfactor=0.5)
+
+    catalog["DateArtist"] = mp.newMap(2020,maptype="PROBING")
     
+    catalog["DateArtworks"] = mp.newMap(1743, maptype="PROBING")
     catalog["Req4"] = None
 
     """indice llave: nombre artista; valor: constituentID del artista"""
@@ -134,6 +137,12 @@ def addArtist(catalog, artist):
         mp.put(catalog['Name'], filtered['DisplayName'], filtered["ConstituentID"])
 
 
+    if mp.contains(catalog["DateArtist"],filtered["BeginDate"]):
+        lt.addLast(me.getValue(mp.get(catalog["DateArtist"],filtered["BeginDate"])), filtered)
+    else:
+        mp.put(catalog["DateArtist"], filtered["BeginDate"], lt.newList("ARRAY_LIST"))
+        lt.addLast(me.getValue(mp.get(catalog["DateArtist"],filtered["BeginDate"])),filtered)
+
 def addArtwork(catalog, artwork):
     filtered = {"Title":artwork["Title"], 
         "ConstituentID":eval(artwork["ConstituentID"]),
@@ -175,6 +184,12 @@ def addArtwork(catalog, artwork):
     else:
         mp.put(catalog["Department"], filtered["Department"], lt.newList("ARRAY_LIST"))
         lt.addLast(me.getValue(mp.get(catalog["Department"], filtered["Department"])), filtered)
+    
+    if mp.contains(catalog["DateArtworks"], filtered["DateAcquired"]):
+        lt.addLast(me.getValue(mp.get(catalog["DateArtworks"], filtered["DateAcquired"])),filtered)
+    else:
+        mp.put(catalog["DateArtworks"],filtered["DateAcquired"], lt.newList("ARRAY_LIST"))
+        lt.addLast(me.getValue(mp.get(catalog["DateArtworks"],filtered["DateAcquired"])), filtered)
 
     # for artistID in filtered["ConstituentID"] :
     #     pareja = mp.get(catalog['ConstID'], artistID)
@@ -243,27 +258,49 @@ def getArtistsCronOrder(catalog, iyear, fyear):
     datos = {"NumTot":0,
             "Primeros3":lt.newList("ARRAY_LIST"),
             "Ultimos3":None}
-    artists = catalog["artists"]
-    pos = ceilSearch(iyear, artists, "BeginDate")
-    if pos[1]:
-        for i in range(pos[0]-1, 1, -1):
-            if lt.getElement(artists, i)["BeginDate"] < iyear:
-                pos = i + 1 
-                break
+    # artists = catalog["artists"]
+    # pos = ceilSearch(iyear, artists, "BeginDate")
+    # if pos[1]:
+    #     for i in range(pos[0]-1, 1, -1):
+    #         if lt.getElement(artists, i)["BeginDate"] < iyear:
+    #             pos = i + 1 
+    #             break
+    # else:
+    #     pos = pos[0]
+    # maxi = 0
+    # for i in range(pos, lt.size(artists)+1):
+    #     elem = lt.getElement(artists,i)
+    #     if iyear <= elem["BeginDate"] <= fyear:
+    #         datos["NumTot"] += 1
+    #         if datos["NumTot"] <= 3:
+    #             lt.addLast(datos["Primeros3"], elem)
+    #         if i > maxi:
+    #             maxi = i
+    #     if elem["BeginDate"] > fyear:
+    #         break
+    # datos["Ultimos3"] = lt.subList(artists,maxi-2, 3)
+    listF = lt.newList("ARRAY_LIST")
+    date = catalog["DateArtist"]
+    keys = mp.keySet(date)
+    if fyear - iyear + 1 > mp.size(date):
+        for i in range(iyear, fyear+1):
+            if mp.contains(date, i):
+                for artist in lt.iterator(me.getValue(mp.get(date,i))):
+                    lt.addLast(listF, artist)
     else:
-        pos = pos[0]
-    maxi = 0
-    for i in range(pos, lt.size(artists)+1):
-        elem = lt.getElement(artists,i)
-        if iyear <= elem["BeginDate"] <= fyear:
-            datos["NumTot"] += 1
-            if datos["NumTot"] <= 3:
-                lt.addLast(datos["Primeros3"], elem)
-            if i > maxi:
-                maxi = i
-        if elem["BeginDate"] > fyear:
-            break
-    datos["Ultimos3"] = lt.subList(artists,maxi-2, 3)
+        for key in lt.iterator(keys):
+            if iyear <= key <= fyear:
+                for artist in lt.iterator(me.getValue(mp.get(date,key))):
+                    lt.addLast(listF, artist)
+
+        ms.sort(listF, lambda x,y: x["BeginDate"] < y["BeginDate"])
+
+    size = lt.size(listF)
+    top3 = lt.subList(listF, 1,3)
+    last3 = lt.subList(listF, size-2, 3)
+    datos["NumTot"] = size
+    datos["Primeros3"] = top3
+    datos["Ultimos3"] = last3 
     return datos
 
 #Obtenido de https://www.techiedelight.com/find-floor-ceil-number-sorted-array/
@@ -293,47 +330,105 @@ def getArtworksCronOrder(catalog, idate, fdate):
     res = {"NumTot":0,
             "Purchase":0,
             "NumArtistas": 0,
-            "Primeros3":lt.newList("ARRAY_LIST"),
-            "Ultimos3":lt.newList("ARRAY_LIST")}
-
-    pos = ceilSearch(idate, catalog["artworks"], "DateAcquired")
-    if pos[1]:
-        for i in range(pos[0]-1, 1, -1):
-            elem = lt.getElement(catalog["artworks"],i)
-            if elem < idate:
-                pos = i + 1
-                break
+            "Primeros3":None,
+            "Ultimos3":None}
+    
+    delta = (fdate-idate).days
+    dates = catalog["DateArtworks"]
+    keys = mp.keySet(dates)
+    listF = lt.newList("ARRAY_LIST")
+    purchase = 0
+    artistas = 0
+    if delta <= mp.size(dates):
+        for i in range(delta+1):
+            d = idate+ td(days=i)
+            if mp.contains(dates, d):
+                for i in lt.iterator(me.getValue(mp.get(dates,d))):
+                    if "purchase" in i["CreditLine"].lower():
+                        purchase += 1
+                    artistas += len(i["ConstituentID"])
+                    lt.addLast(listF, i)
     else:
-        pos = pos[0]
-    maxi = pos
-    datos = catalog["artworks"]
-    for i in range(pos, lt.size(datos)+1):
-        elem = lt.getElement(datos, i)
-        if idate <= elem["DateAcquired"] <= fdate:
-            res["NumTot"] += 1
-            if "purchase" in elem["CreditLine"].lower():
-                res["Purchase"] += 1
-            for id in elem["ConstituentID"]:
-                res["NumArtistas"] += 1
-            if res["NumTot"] <= 3:
-                filtrado = {"Title": elem["Title"], "ArtistsNames":lt.newList("ARRAY_LIST"), "Medium":elem["Medium"], "Date":elem["Date"], "DateAcquired":elem["DateAcquired"], "Dimensions":elem["Dimensions"]}
-                for id in elem["ConstituentID"]:
-                    name = mp.get(catalog["ConstID"], id)["value"]["DisplayName"]
-                    lt.addLast(filtrado["ArtistsNames"], name)
-                lt.addLast(res["Primeros3"], filtrado)
-            if i > maxi:
-                maxi = i
-        if elem["DateAcquired"] > fdate:
-            break
-    for i in range(maxi-2, maxi+1):
-        elem = lt.getElement(datos, i)
-        filtrado = {"Title": elem["Title"], "ArtistsNames":lt.newList("ARRAY_LIST"), "Medium":elem["Medium"], "Date":elem["Date"], "DateAcquired":elem["DateAcquired"], "Dimensions":elem["Dimensions"]}
-        for id in elem["ConstituentID"]:
-            name = mp.get(catalog["ConstID"], id)["value"]["DisplayName"]
-            lt.addLast(filtrado["ArtistsNames"], name)
-        lt.addLast(res["Ultimos3"], filtrado)
-        
+        for key in lt.iterator(keys):
+            if idate <= key <= fdate:
+                for i in lt.iterator(me.getValue(mp.get(dates,key))):
+                    if "purchase" in i["CreditLine"].lower():
+                        purchase += 1
+                    artistas += len(i["ConstituentID"])
+                    lt.addLast(listF, i)
+
+        ms.sort(listF, lambda x,y : x["DateAcquired"] < y["DateAcquired"])
+    size = lt.size(listF)
+    top3 = lt.subList(listF, 1,3)
+    last3 = lt.subList(listF, size-2, 3)
+
+    for i in lt.iterator(top3):
+        arts = lt.newList("ARRAY_LIST")
+        for artist in i["ConstituentID"]:
+            try:
+                name = me.getValue(mp.get(catalog["ConstID"], artist))["DisplayName"]
+                lt.addLast(arts,name)
+            except:
+                lt.addLast(arts, "Unknown")
+        i["ArtistsNames"] = arts
+
+    for i in lt.iterator(last3):
+        arts = lt.newList("ARRAY_LIST")
+        for artist in i["ConstituentID"]:
+            try:
+                name = me.getValue(mp.get(catalog["ConstID"], artist))["DisplayName"]
+                lt.addLast(arts,name)
+            except:
+                lt.addLast(arts, "Unknown")
+        i["ArtistsNames"] = arts
+    
+    res["NumTot"] = size 
+    res["Purchase"] = purchase 
+    res["NumArtistas"] = artistas 
+    res["Primeros3"] = top3 
+    res["Ultimos3"] = last3
+
     return res
+    # pos = ceilSearch(idate, catalog["artworks"], "DateAcquired")
+    # if pos[1]:
+    #     for i in range(pos[0]-1, 1, -1):
+    #         elem = lt.getElement(catalog["artworks"],i)
+    #         if elem < idate:
+    #             pos = i + 1
+    #             break
+    # else:
+    #     pos = pos[0]
+    # maxi = pos
+    # datos = catalog["artworks"]
+    # for i in range(pos, lt.size(datos)+1):
+    #     elem = lt.getElement(datos, i)
+    #     if idate <= elem["DateAcquired"] <= fdate:
+    #         res["NumTot"] += 1
+    #         if "purchase" in elem["CreditLine"].lower():
+    #             res["Purchase"] += 1
+    #         for id in elem["ConstituentID"]:
+    #             res["NumArtistas"] += 1
+    #         if res["NumTot"] <= 3:
+    #             filtrado = {"Title": elem["Title"], "ArtistsNames":lt.newList("ARRAY_LIST"), "Medium":elem["Medium"], "Date":elem["Date"], "DateAcquired":elem["DateAcquired"], "Dimensions":elem["Dimensions"]}
+    #             for id in elem["ConstituentID"]:
+    #                 name = mp.get(catalog["ConstID"], id)["value"]["DisplayName"]
+    #                 lt.addLast(filtrado["ArtistsNames"], name)
+    #             lt.addLast(res["Primeros3"], filtrado)
+    #         if i > maxi:
+    #             maxi = i
+    #     if elem["DateAcquired"] > fdate:
+    #         break
+    # for i in range(maxi-2, maxi+1):
+    #     elem = lt.getElement(datos, i)
+    #     filtrado = {"Title": elem["Title"], "ArtistsNames":lt.newList("ARRAY_LIST"), "Medium":elem["Medium"], "Date":elem["Date"], "DateAcquired":elem["DateAcquired"], "Dimensions":elem["Dimensions"]}
+    #     for id in elem["ConstituentID"]:
+    #         name = mp.get(catalog["ConstID"], id)["value"]["DisplayName"]
+    #         lt.addLast(filtrado["ArtistsNames"], name)
+    #     lt.addLast(res["Ultimos3"], filtrado)
+
+
+        
+    
 
 @timer
 def getArtworksByMedium(catalog, name):
@@ -389,7 +484,7 @@ def classifyByNation(catalog):
 
     for obra in lt.iterator(catalog["artworks"]):
         adjust = {"Title": obra["Title"], "Date": obra["Date"], "Medium": obra["Medium"], "Dimensions" :obra["Dimensions"], "ArtistsNames":lt.newList("ARRAY_LIST")}
-        nations = mp.newMap(195,maptype='PROBING',loadfactor=0.5)
+        nations = mp.newMap(10,maptype='PROBING',loadfactor=0.5)
         for id in obra["ConstituentID"]:
             try:
                 artist = mp.get(catalog["ConstID"], id)["value"]
