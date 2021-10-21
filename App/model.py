@@ -705,9 +705,9 @@ def cmpArtistasreq6 (artist1, artist2):
         elif artist1["Total Técnicas"] == artist2["Total Técnicas"]:
             return False
         else:
-            False
+            return False
     else:
-        False
+        return False
     
 # Funciones de ordenamiento
 def sortArtists(catalog):
