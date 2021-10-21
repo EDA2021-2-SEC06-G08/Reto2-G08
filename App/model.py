@@ -277,7 +277,7 @@ def getArtistsCronOrder(catalog, iyear, fyear):
     listF = lt.newList("ARRAY_LIST")
     date = catalog["DateArtist"]
     keys = mp.keySet(date)
-    if fyear - iyear + 1 > mp.size(date):
+    if fyear - iyear + 1 <= mp.size(date):
         for i in range(iyear, fyear+1):
             if mp.contains(date, i):
                 for artist in lt.iterator(me.getValue(mp.get(date,i))):
