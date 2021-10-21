@@ -25,6 +25,7 @@
  """
 
 
+from DISClib.DataStructures.arraylist import newList
 from DISClib.DataStructures.chaininghashtable import newMap
 import config as cf
 from DISClib.ADT import list as lt
@@ -96,12 +97,12 @@ def newCatalog():
     catalog["Req4"] = None
 
     """indice llave: nombre artista; valor: constituentID del artista"""
-    catalog["Name"] = mp.newMap(15220*2,
+    catalog["Name"] = mp.newMap(15220,
                                    maptype='PROBING',
                                    loadfactor=0.5)
 
     """indice llave: constituentId de un artista; valor: arreglo con obras de ese artista"""
-    catalog["IDandArtworks"] = mp.newMap(15220*2,
+    catalog["IDandArtworks"] = mp.newMap(15220,
                                    maptype='PROBING',
                                    loadfactor=0.5)
 
@@ -444,7 +445,7 @@ def getArtworksByMedium(catalog, name):
     listaObras = me.getValue(mp.get(catalog["IDandArtworks"], constid))
     data["TotObras"] = lt.size(listaObras)
 
-    mapMedium = mp.newMap(data["TotObras"],   #asumiendo que cada medio tenga por lo menos dos obras
+    mapMedium = mp.newMap(data["TotObras"]//2,
                             maptype='PROBING',
                             loadfactor=0.5)
     mayor = 0
@@ -612,32 +613,75 @@ def calculateCost(obra):
 
 @timer
 def artistasProlificos(catalog, numArtist, iyear, fyear):
-    rta = {""
-            }
+    lista = lt.newList("ARRAY_LIST")
+    for artista in lt.iterator(catalog["artists"]):
+        if (artista["BeginDate"]>= iyear) and (artista["BeginDate"]<= fyear): 
+            data = soportereq6(catalog, artista["DisplayName"])
+            dicc = {"Nombre": artista["DisplayName"], "Fecha nacimiento": artista["BeginDate"], 
+                    "Genero": artista["Gender"], "Total Obras": data["TotObras"], "Total Técnicas": data["TotMedios"], 
+                    "Técnica más usada": data["MedMasUsado"]}
+            lt.addLast(lista, dicc)
+    ms.sort(lista, cmpArtistasreq6)
+    nArtistasProlificos = lt.subList(lista, 1, numArtist) 
+    prolifico = lt.getElement(lista, 1)
+    infoObras = soportereq6(catalog, prolifico("Nombre"))
+    if infoObras["5primeras"]:
+        primeras5 = infoObras["5primeras"]
+    else:
+        primeras5 = infoObras["ObrasMedMasUsado"] 
+    rta = {"artistas": nArtistasProlificos, "obras": primeras5}
+    return rta
 
 
-    data = getArtworksByMedium(catalog, name)
+def soportereq6(catalog, name):
+    data = {"TotObras": None,  
+            "TotMedios": None,
+            "MedMasUsado": None,
+            "constID": None,
+            "num_mayor": None,
+            "ObrasMedMasUsado": None,
+            "5primeras": None}
+    try:
+        pareja = mp.get(catalog["Name"], name)
+        constid = me.getValue(pareja)
+        data["constID"] = constid
+    except:
+        return False
 
-          
+    listaObras = me.getValue(mp.get(catalog["IDandArtworks"], constid))
+    data["TotObras"] = lt.size(listaObras)
+
+    mapMedium = mp.newMap(data["TotObras"]//2,
+                            maptype='PROBING',
+                            loadfactor=0.5)
+    mayor = 0
+    for obra in lt.iterator(listaObras):
+        if mp.contains(mapMedium, obra["Medium"]):
+            dicc = {"Titulo": obra["Title"], "Fecha de la obra": obra["Date"], 
+                    "Fecha de adquisición": obra["DateAcquired"], "Medio": obra["Medium"], 
+                    "Departamento": obra["Department"],"Clasificación": obra["Classification"],
+                    "Dimensiones": obra["Dimensions"]}
+            lt.addLast(me.getValue(mp.get(mapMedium, obra["Medium"])), dicc)
+        else:
+            dicc = {"Titulo": obra["Title"], "Fecha de la obra": obra["Date"], 
+                    "Fecha de adquisición": obra["DateAcquired"], "Medio": obra["Medium"], 
+                    "Departamento": obra["Department"],"Clasificación": obra["Classification"],
+                    "Dimensiones": obra["Dimensions"]}
+            mp.put(mapMedium, obra["Medium"], lt.newList("ARRAY_LIST"))
+            lt.addLast(me.getValue(mp.get(mapMedium, obra["Medium"])), dicc)
+        tamaño = lt.size(me.getValue(mp.get(mapMedium, obra["Medium"])))
+        if tamaño > mayor:
+            mayor = tamaño
+            data["MedMasUsado"] = obra["Medium"]
+    data["TotMedios"] = mp.size(mapMedium)
+    data["num_mayor"] = mayor
+    data["ObrasMedMasUsado"] = me.getValue(mp.get(mapMedium, data["MedMasUsado"]))
+    ms.sort(data["ObrasMedMasUsado"], cmpArworksByDate2)
+
+    if mayor >= 5:
+        data["5primeras"] = lt.subList(data["ObrasMedMasUsado"], 1, 5)
+
     return data
-
-"""Nombre del Artista
-Fecha de Nacimiento
-Genero
-Total de obras
-Total técnicas (medios) utilizados
-La técnica más utilizada"""
-
-"""Listado de las primeras 5 obras de la técnica mas utilizada
-con:
-Titulo
-Fecha de la obra
-Fecha de adquisición
-Medio
-Departamento y clasificación**
-Dimensiones
-"""
-
 
     
 
@@ -652,6 +696,19 @@ def cmpArworksByDate2(artwork1, artwork2):
 def cmpArtistsbyDate(artist1, artist2):
     return artist1["BeginDate"] < artist2["BeginDate"]
 
+def cmpArtistasreq6 (artist1, artist2):
+    if artist1["Total Obras"] > artist2["Total Obras"] :
+        return True
+    elif artist1["Total Obras"] == artist2["Total Obras"] :
+        if artist1["Total Técnicas"] > artist2["Total Técnicas"]:
+            return True
+        elif artist1["Total Técnicas"] == artist2["Total Técnicas"]:
+            return False
+        else:
+            False
+    else:
+        False
+    
 # Funciones de ordenamiento
 def sortArtists(catalog):
     ms.sort(catalog["artists"],cmpArtistsbyDate)

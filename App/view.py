@@ -43,7 +43,7 @@ def printMenu():
     print("4. REQ. 3: Clasificar las obras de un artista por técnica")
     print("5. REQ. 4: Clasificar las obras por la nacionalidad de sus creadores")
     print("6. REQ. 5: Transportar obras de un departamento")  
-    print("7. BONO: Encontrar los artistas más prolíficos del museo")  
+    print("7. REQ. 6 (BONO): Encontrar los artistas más prolíficos del museo")  
     print("0- Salir")
 
 def initCatalog():
@@ -166,9 +166,32 @@ def printTransportArtwDepartment(data, department):
         print("")
 
 
-def printArtistasProlificos(prolificos, numArtist, iyear, fyear):
+def printArtistasProlificos(rta, numArtist, iyear, fyear):
+    print(f"{41*'='} Req. No.6 (BONUS) Inputs {41*'='}")
+    print(f"Searching artist born between {iyear} to {fyear}")
+    print(f"Amount of artist in the Top Ranking: {numArtist}")
+    print("")
+    print(f"{41*'='} Req. No.6 (BONUS) Answer {41*'='}")
+    print(f"The TOP {numArtist} most prolific artist in the period are:")
+    print("")
+    i = 1
+    for artist in lt.iterator(rta["artistas"]):
+        print(100*"-")
+        print(f"{i}. {artist}")
+        i += 1 
+    print(100*"-")
+    print("")
+    print(f"{lt.getElement(rta['artistas'],1)['Nombre']} has {lt.getElement(rta['artistas'],1)['Total Obras']} in his/her name at the museum.")
+    print(f"The first {numArtist} pieces of his/her work sorted by acquired date are:")
+    print("")
+    i = 1
+    for obra in lt.iterator(rta['obras']): 
+        print(100*"-")
+        print(f"{i}. {obra}")
+        i += 1
+    print(100*"-")
+    print("")
 
-    pass
 
 # def printnArtworksOldestByMedium(oldestArtworks, n, medium):
 #     print('')
@@ -257,14 +280,14 @@ while True:
             print("No ingreso un departamento del museo")
         
     elif int(inputs[0]) == 7:
-        try:
-            numArtist = int(input("Ingrese el número de artistas que desea en la clasificación: "))
-            iyear = int(input("Ingrese el año inicial: "))
-            fyear = int(input("Ingrese el año final: "))
-            prolificos = controller.artistasProlificos(catalog, numArtist, iyear, fyear)
-            printArtistasProlificos(prolificos, numArtist, iyear, fyear)
-        except:
-            print("Ingrese numeros enteros válidos")   
+        #try:
+        numArtist = int(input("Ingrese el número de artistas que desea en la clasificación: "))
+        iyear = int(input("Ingrese el año inicial: "))
+        fyear = int(input("Ingrese el año final: "))
+        prolificos = controller.artistasProlificos(catalog, numArtist, iyear, fyear)
+        printArtistasProlificos(prolificos, numArtist, iyear, fyear)
+        #except:
+            #print("Ingrese numeros enteros válidos")   
 
     else:
         sys.exit(0)

@@ -98,6 +98,6 @@ def getArtworksByMedium(catalog, name):
 def transportArtwDepartment(catalog, department):
     return model.transportArtwDepartment(catalog, department)
 
-def artistasProlificos(numArtist, iyear, fyear):
+def artistasProlificos(catalog, numArtist, iyear, fyear):
     return model.artistasProlificos(catalog,numArtist, iyear, fyear)
 
