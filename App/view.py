@@ -167,7 +167,7 @@ def printTransportArtwDepartment(data, department):
 
 
 def printArtistasProlificos(prolificos, numArtist, iyear, fyear):
-    
+
     pass
 
 # def printnArtworksOldestByMedium(oldestArtworks, n, medium):
@@ -261,7 +261,7 @@ while True:
             numArtist = int(input("Ingrese el número de artistas que desea en la clasificación: "))
             iyear = int(input("Ingrese el año inicial: "))
             fyear = int(input("Ingrese el año final: "))
-            prolificos = controller.artistasProlificos(numArtist, iyear, fyear)
+            prolificos = controller.artistasProlificos(catalog, numArtist, iyear, fyear)
             printArtistasProlificos(prolificos, numArtist, iyear, fyear)
         except:
             print("Ingrese numeros enteros válidos")   

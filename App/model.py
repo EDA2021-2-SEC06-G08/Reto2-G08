@@ -25,6 +25,7 @@
  """
 
 
+from DISClib.DataStructures.chaininghashtable import newMap
 import config as cf
 from DISClib.ADT import list as lt
 from DISClib.ADT import map as mp
@@ -91,10 +92,12 @@ def newCatalog():
     
     catalog["Req4"] = None
 
+    """indice llave: nombre artista; valor: constituentID del artista"""
     catalog["Name"] = mp.newMap(15220*2,
                                    maptype='PROBING',
                                    loadfactor=0.5)
 
+    """indice llave: constituentId de un artista; valor: arreglo con obras de ese artista"""
     catalog["IDandArtworks"] = mp.newMap(15220*2,
                                    maptype='PROBING',
                                    loadfactor=0.5)
@@ -112,11 +115,19 @@ def addArtist(catalog, artist):
 
     lt.addLast(catalog["artists"], filtered)
 
+    if mp.contains(catalog["Nacimiento"], filtered["BeginDate"]):
+        lt.addLast(me.getValue(mp.get(catalog["Nacimiento"], filtered["BeginDate"])), filtered["DisplayName"])
+    else:
+        mp.put(catalog["Nacimiento"], filtered["BeginDate"], lt.newList("ARRAY_LIST"))
+        lt.addLast(me.getValue(mp.get(catalog["Nacimiento"], filtered["BeginDate"])), filtered["DisplayName"])
+
+
     if mp.contains(catalog['ConstID'], filtered['ConstituentID']):
         pass
     else:
         mp.put(catalog['ConstID'], filtered['ConstituentID'], filtered)
     
+
     if mp.contains(catalog['Name'], filtered['DisplayName']):
         pass
     else:
@@ -511,12 +522,35 @@ def calculateCost(obra):
         return maxi  
 
 @timer
-def artistasProlificos(numArtist, iyear, fyear):
-    
+def artistasProlificos(catalog, numArtist, iyear, fyear):
+    rta = {""
+            }
 
 
+    data = getArtworksByMedium(catalog, name)
 
+          
     return data
+
+"""Nombre del Artista
+Fecha de Nacimiento
+Genero
+Total de obras
+Total técnicas (medios) utilizados
+La técnica más utilizada"""
+
+"""Listado de las primeras 5 obras de la técnica mas utilizada
+con:
+Titulo
+Fecha de la obra
+Fecha de adquisición
+Medio
+Departamento y clasificación**
+Dimensiones
+"""
+
+
+    
 
 
 # Funciones utilizadas para comparar elementos dentro de una lista
