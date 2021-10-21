@@ -7,6 +7,7 @@ from DISClib.ADT import map as mp
 from DISClib.DataStructures import mapentry as me
 from DISClib.Algorithms.Sorting import mergesort as ms
 from time import process_time as ptime
+from datetime import datetime as dt
 import pickle
 assert cf
 
@@ -27,17 +28,18 @@ def loadReq(catalog):
     catalog["Req4"] = model.classifyByNation(catalog)
     
 
-calcCost = model.calculateCost
 
-with open(r"C:\Users\camil\OneDrive\Desktop\Los Andes\5to Semestre\EDA\Retos\Reto2-G08\Data\catalogLarge", "rb") as file:
-    catalog = pickle.load(file)
-# catalog = ctl.initCatalog()
-# loadData(catalog)
-# ctl.sortArtists(catalog)
-# ctl.sortArtworks(catalog)
-# loadReq(catalog)
+# with open(r"C:\Users\camil\OneDrive\Desktop\Los Andes\5to Semestre\EDA\Retos\Reto2-G08\Data\catalogLarge", "rb") as file:
+#     catalog = pickle.load(file)
+catalog = ctl.initCatalog()
+loadData(catalog)
+ctl.sortArtists(catalog)
+ctl.sortArtworks(catalog)
+loadReq(catalog)
 
-x = 5
+x = model.getArtworksCronOrder(catalog, "1944-06-06", "1989-11-09")
+
+
 
 
 
